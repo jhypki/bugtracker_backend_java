@@ -9,5 +9,4 @@ public class BugtrackerBackendApplication {
     public static void main(String[] args) {
         SpringApplication.run(BugtrackerBackendApplication.class, args);
     }
-
 }
