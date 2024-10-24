@@ -10,7 +10,6 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     services:
@@ -19,54 +18,33 @@ jobs:
         ports:
           - 5432:5432
         env:
-          POSTGRES_DB: testdb
-          POSTGRES_USER: testuser
-          POSTGRES_PASSWORD: testpassword
+          POSTGRES_DB: BugTrackerDB
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
         options: >-
-          --health-cmd="pg_isready -U testuser -d testdb"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
+          --health-cmd "pg_isready -U postgres" 
+          --health-interval 10s 
+          --health-timeout 5s 
+          --health-retries 5
 
     steps:
-      # Step 1: Checkout the code
-      - name: Check out repository
+      - name: Check out code
         uses: actions/checkout@v3
 
-      # Step 2: Set up JDK 17 (or your project's Java version)
       - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
-          distribution: 'temurin' # You can also use 'adopt'
           java-version: '17'
 
-      # Step 3: Make Gradlew executable
-      - name: Make Gradlew executable
+      - name: Set up Gradle wrapper permissions
         run: chmod +x ./gradlew
 
-      # Step 4: Cache Gradle dependencies to make the build faster
-      - name: Cache Gradle packages
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
+      - name: Set environment variables for database
+        run: |
+          echo "SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/BugTrackerDB" >> $GITHUB_ENV
+          echo "SPRING_DATASOURCE_USERNAME=postgres" >> $GITHUB_ENV
+          echo "SPRING_DATASOURCE_PASSWORD=password" >> $GITHUB_ENV
 
-      # Step 5: Run Gradle build and tests
-      - name: Build and run tests
+      - name: Build and test
         run: ./gradlew build --info
 
-      # Step 6: Run integration tests (optional)
-      - name: Run tests
-        run: ./gradlew test --info
-
-      # Step 7: Run tests depending on database
-      - name: Run integration tests with Postgres DB
-        env:
-          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/testdb
-          SPRING_DATASOURCE_USERNAME: testuser
-          SPRING_DATASOURCE_PASSWORD: testpassword
-        run: ./gradlew test --info
