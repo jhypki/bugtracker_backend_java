@@ -40,7 +40,11 @@ jobs:
           distribution: 'temurin' # You can also use 'adopt'
           java-version: '17'
 
-      # Step 3: Cache Gradle dependencies to make the build faster
+      # Step 3: Make Gradlew executable
+      - name: Make Gradlew executable
+        run: chmod +x ./gradlew
+
+      # Step 4: Cache Gradle dependencies to make the build faster
       - name: Cache Gradle packages
         uses: actions/cache@v3
         with:
@@ -51,15 +55,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      # Step 4: Run Gradle build and tests
+      # Step 5: Run Gradle build and tests
       - name: Build and run tests
         run: ./gradlew build --info
 
-      # Step 5: Run integration tests (optional)
+      # Step 6: Run integration tests (optional)
       - name: Run tests
         run: ./gradlew test --info
 
-      # Step 6: Run tests depending on database
+      # Step 7: Run tests depending on database
       - name: Run integration tests with Postgres DB
         env:
           SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/testdb
