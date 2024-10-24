@@ -11,6 +11,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment: dev
 
     services:
       db:
@@ -18,9 +19,9 @@ jobs:
         ports:
           - 5432:5432
         env:
-          POSTGRES_DB: BugTrackerDB
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: password
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
         options: >-
           --health-cmd "pg_isready -U postgres" 
           --health-interval 10s 
@@ -48,4 +49,6 @@ jobs:
 
       - name: Build and test
         run: ./gradlew build --info
+        env:
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
 
