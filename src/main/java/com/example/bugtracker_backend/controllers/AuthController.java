@@ -31,7 +31,7 @@ public class AuthController {
 
         String jwtToken = jwtUtils.generateToken(savedUser.getEmail());
 
-        UserData userData = new UserData(savedUser.getFirstName(), savedUser.getSecondName(), savedUser.getEmail());
+        UserData userData = new UserData(savedUser.getId(), savedUser.getFirstName(), savedUser.getSecondName(), savedUser.getEmail(), savedUser.getRole());
 
         AuthenticationResponse response = new AuthenticationResponse(jwtToken, userData);
 
@@ -44,7 +44,7 @@ public class AuthController {
 
         String jwtToken = jwtUtils.generateToken(foundUser.getEmail());
 
-        UserData userData = new UserData(foundUser.getFirstName(), foundUser.getSecondName(), foundUser.getEmail());
+        UserData userData = new UserData(foundUser.getId(), foundUser.getFirstName(), foundUser.getSecondName(), foundUser.getEmail(), foundUser.getRole());
 
         AuthenticationResponse response = new AuthenticationResponse(jwtToken, userData);
 

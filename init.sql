@@ -241,7 +241,9 @@ ALTER TABLE ONLY public.comments
 ALTER TABLE ONLY public.stats
     ADD CONSTRAINT stats_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
 
-
+CREATE CAST (character varying AS users_role) with inout as assignment;
+CREATE CAST (character varying AS bug_status) with inout as assignment;
+CREATE CAST (character varying AS severity) with inout as assignment;
 --
 -- PostgreSQL database dump complete
 --

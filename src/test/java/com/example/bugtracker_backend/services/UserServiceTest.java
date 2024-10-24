@@ -1,7 +1,9 @@
 package com.example.bugtracker_backend.services;
 
+import com.example.bugtracker_backend.dto.LoginRequest;
 import com.example.bugtracker_backend.dto.RegisterRequest;
-import com.example.bugtracker_backend.exceptions.UserAlreadyExistsException;
+import com.example.bugtracker_backend.exceptions.BadRequestException;
+import com.example.bugtracker_backend.exceptions.ConflictException;
 import com.example.bugtracker_backend.models.User;
 import com.example.bugtracker_backend.repositories.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,26 +27,43 @@ class UserServiceTest {
     @InjectMocks
     private UserService userService;
 
+    private RegisterRequest registerRequest;
+    private LoginRequest loginRequest;
+    private User user;
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+
+        registerRequest = new RegisterRequest();
+        registerRequest.setEmail("test@example.com");
+        registerRequest.setPassword("password123");
+        registerRequest.setFirstName("John");
+        registerRequest.setLastName("Doe");
+
+        loginRequest = new LoginRequest();
+        loginRequest.setEmail("test@example.com");
+        loginRequest.setPassword("password123");
+
+        user = new User();
+        user.setEmail("test@example.com");
+        user.setPasswordHash("hashed_password");
+        user.setFirstName("John");
+        user.setSecondName("Doe");
+        user.setRole(null);
+
+        when(userRepository.findByEmail("test@example.com")).thenReturn(user);
     }
 
     @Test
     void registerNewUser_ShouldRegisterSuccessfully() {
         // Arrange
-        RegisterRequest request = new RegisterRequest();
-        request.setEmail("test@example.com");
-        request.setPassword("password123");
-        request.setFirstName("John");
-        request.setLastName("Doe");
-
-        when(userRepository.existsByEmail(request.getEmail())).thenReturn(false);
-        when(passwordEncoder.encode(request.getPassword())).thenReturn("hashed_password");
+        when(userRepository.existsByEmail(registerRequest.getEmail())).thenReturn(false);
+        when(passwordEncoder.encode(registerRequest.getPassword())).thenReturn("hashed_password");
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
-        User registeredUser = userService.registerNewUser(request);
+        User registeredUser = userService.registerNewUser(registerRequest);
 
         // Assert
         assertNotNull(registeredUser);
@@ -53,25 +72,77 @@ class UserServiceTest {
         assertEquals("John", registeredUser.getFirstName());
         assertEquals("Doe", registeredUser.getSecondName());
 
-        verify(userRepository).existsByEmail(request.getEmail());
-        verify(passwordEncoder).encode(request.getPassword());
+        verify(userRepository).existsByEmail(registerRequest.getEmail());
+        verify(passwordEncoder).encode(registerRequest.getPassword());
         verify(userRepository).save(any(User.class));
     }
 
     @Test
     void registerNewUser_ShouldThrowException_WhenUserAlreadyExists() {
         // Arrange
-        RegisterRequest request = new RegisterRequest();
-        request.setEmail("test@example.com");
+        registerRequest.setEmail("test@example.com");
 
-        when(userRepository.existsByEmail(request.getEmail())).thenReturn(true);
+        when(userRepository.existsByEmail(registerRequest.getEmail())).thenReturn(true);
 
         // Act & Assert
-        assertThrows(UserAlreadyExistsException.class, () -> {
-            userService.registerNewUser(request);
+        assertThrows(ConflictException.class, () -> {
+            userService.registerNewUser(registerRequest);
         });
 
-        verify(userRepository).existsByEmail(request.getEmail());
+        verify(userRepository).existsByEmail(registerRequest.getEmail());
         verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void loginUser_ShouldLoginSuccessfully() {
+        // Arrange
+        User user = new User();
+        user.setEmail("test@example.com");
+        user.setPasswordHash("hashed_password");
+        user.setFirstName("John");
+        user.setSecondName("Doe");
+        user.setRole(null);
+
+        when(userRepository.findByEmail("test@example.com")).thenReturn(user);
+        when(passwordEncoder.matches("password123", "hashed_password")).thenReturn(true);
+
+        // Act
+        User loggedInUser = userService.loginUser(loginRequest);
+
+        // Assert
+        assertNotNull(loggedInUser);
+        assertEquals("test@example.com", loggedInUser.getEmail());
+        assertEquals("hashed_password", loggedInUser.getPasswordHash());
+        assertEquals("John", loggedInUser.getFirstName());
+        assertEquals("Doe", loggedInUser.getSecondName());
+        assertNull(loggedInUser.getRole());
+    }
+
+    @Test
+    void loginUser_ShouldThrowException_WhenUserNotFound() {
+        // Arrange
+        loginRequest.setEmail("test@example.com");
+
+        when(userRepository.findByEmail("test@example.com")).thenReturn(null);
+        when(passwordEncoder.matches("password123", "hashed_password")).thenReturn(true);
+
+        // Act & Assert
+        assertThrows(BadRequestException.class, () -> {
+            userService.loginUser(loginRequest);
+        });
+    }
+
+    @Test
+    void loginUser_ShouldThrowException_WhenPasswordIsInvalid() {
+        // Arrange
+        loginRequest.setEmail("test@example.com");
+
+        when(userRepository.findByEmail("text@example.com")).thenReturn(user);
+        when(passwordEncoder.matches("password123", "hashed_password")).thenReturn(false);
+
+        // Act & Assert
+        assertThrows(BadRequestException.class, () -> {
+            userService.loginUser(loginRequest);
+        });
     }
 }

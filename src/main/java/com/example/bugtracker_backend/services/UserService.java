@@ -2,7 +2,10 @@ package com.example.bugtracker_backend.services;
 
 import com.example.bugtracker_backend.dto.LoginRequest;
 import com.example.bugtracker_backend.dto.RegisterRequest;
-import com.example.bugtracker_backend.exceptions.UserAlreadyExistsException;
+import com.example.bugtracker_backend.dto.UserData;
+import com.example.bugtracker_backend.exceptions.BadRequestException;
+import com.example.bugtracker_backend.exceptions.ConflictException;
+import com.example.bugtracker_backend.mappers.UserDataMapper;
 import com.example.bugtracker_backend.models.User;
 import com.example.bugtracker_backend.repositories.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -16,22 +19,17 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserDataMapper userDataMapper;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, UserDataMapper userDataMapper) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
-    }
-
-    public User addUser(User user) {
-        if (userRepository.existsByEmail(user.getEmail())) {
-            throw new UserAlreadyExistsException("A user with this email already exists.");
-        }
-        return userRepository.save(user);
+        this.userDataMapper = userDataMapper;
     }
 
     public User registerNewUser(RegisterRequest registerRequest) {
         if (userRepository.existsByEmail(registerRequest.getEmail())) {
-            throw new UserAlreadyExistsException("Email is already in use");
+            throw new ConflictException("Email is already in use");
         }
 
         User user = new User();
@@ -45,22 +43,48 @@ public class UserService {
 
     public User loginUser(LoginRequest loginRequest) {
         User user = userRepository.findByEmail(loginRequest.getEmail());
-        //TODO Implement error handling
-        if (user == null) {
-            throw new UserAlreadyExistsException("User not found");
+
+        if (user == null){
+            throw new BadRequestException("User not found");
         }
+
+        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPasswordHash())) {
+            throw new BadRequestException("Invalid password");
+        }
+
         return user;
     }
 
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    public List<UserData> getAllUsers() {
+        List<User> users = userRepository.findAll();
+
+        if(users.isEmpty()) {
+            throw new BadRequestException("No users found");
+        }
+
+        return users.stream()
+                .map(UserDataMapper::toUserData)
+                .toList();
     }
 
-    public Optional<User> getUserById(Integer id) {
-        return userRepository.findById(id);
+    public Optional<UserData> getUserById(Integer id) {
+        Optional<User> user = userRepository.findById(id);
+
+        if (user.isEmpty()) {
+            throw new BadRequestException("User not found");
+        }
+
+        return user.map(UserDataMapper::toUserData);
     }
 
-    public Optional<User> getUserByEmail(String email) {
-        return Optional.ofNullable(userRepository.findByEmail(email));
+
+    public Optional<UserData> getUserByEmail(String email) {
+        Optional<User> user = Optional.ofNullable(userRepository.findByEmail(email));
+
+        if (user.isEmpty()) {
+            throw new BadRequestException("User not found");
+        }
+
+        return user.map(UserDataMapper::toUserData);
     }
 }

@@ -33,7 +33,7 @@ public class User {
     @Column(nullable = false)
     private String passwordHash;
 
-//    @Enumerated(EnumType.STRING)
-//    @Column(nullable = true)
-//    private UsersRole role;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = true)
+    private UsersRole role;
 }

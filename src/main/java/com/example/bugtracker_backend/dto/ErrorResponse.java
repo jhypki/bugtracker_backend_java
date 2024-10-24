@@ -1,29 +1,19 @@
 package com.example.bugtracker_backend.dto;
 
+import lombok.Getter;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
-public class ValidationErrorResponse {
-
+@Getter
+public class ErrorResponse {
     final private LocalDateTime timestamp;
     final private String message;
     final private List<String> errors;
 
-    public ValidationErrorResponse(String message, List<String> errors) {
+    public ErrorResponse(String message, List<String> errors) {
         this.timestamp = LocalDateTime.now();
         this.message = message;
         this.errors = errors;
-    }
-
-    public LocalDateTime getTimestamp() {
-        return timestamp;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public List<String> getErrors() {
-        return errors;
     }
 }

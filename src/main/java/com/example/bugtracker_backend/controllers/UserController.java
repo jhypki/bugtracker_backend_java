@@ -1,7 +1,8 @@
 package com.example.bugtracker_backend.controllers;
 
-import com.example.bugtracker_backend.models.User;
+import com.example.bugtracker_backend.dto.UserData;
 import com.example.bugtracker_backend.services.UserService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,23 +18,18 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping
-    public User addUser(@RequestBody User user) {
-        return userService.addUser(user);
-    }
-
     @GetMapping
-    public List<User> getAllUsers() {
-        return userService.getAllUsers();
+    public ResponseEntity<List<UserData>> getAllUsers() {
+        return ResponseEntity.ok(userService.getAllUsers());
     }
 
     @GetMapping("/{id}")
-    public Optional<User> getUserById(@PathVariable Integer id) {
-        return userService.getUserById(id);
+    public ResponseEntity<Optional<UserData>> getUserById(@PathVariable Integer id) {
+        return ResponseEntity.ok(userService.getUserById(id));
     }
 
     @GetMapping("/email")
-    public Optional<User> getUserByEmail(@RequestParam String email) {
-        return userService.getUserByEmail(email);
+    public ResponseEntity<Optional<UserData>> getUserByEmail(@RequestParam String email) {
+        return ResponseEntity.ok(userService.getUserByEmail(email));
     }
 }
