@@ -3,6 +3,7 @@ package com.example.bugtracker_backend.utils;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -18,9 +19,7 @@ public class JwtUtils {
 
     private final SecretKey secretKey;
 
-    public JwtUtils() {
-        // TODO - Move secret key to environment variable
-        String secret = "1235g1f5twe4r2531gasdfasdferaeranery8abne587tabvd8syfba8sdfasdf";
+    public JwtUtils(@Value("${jwt.secret}") String secret) {
         byte[] decodedKey = Base64.getDecoder().decode(secret);
         this.secretKey = new SecretKeySpec(decodedKey, 0, decodedKey.length, "HmacSHA256");
     }
