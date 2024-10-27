@@ -1,11 +1,13 @@
 package com.example.bugtracker_backend.services;
 
+import com.example.bugtracker_backend.dto.AuthenticationResponse;
 import com.example.bugtracker_backend.dto.LoginRequest;
 import com.example.bugtracker_backend.dto.RegisterRequest;
 import com.example.bugtracker_backend.exceptions.BadRequestException;
 import com.example.bugtracker_backend.exceptions.ConflictException;
 import com.example.bugtracker_backend.models.User;
 import com.example.bugtracker_backend.repositories.UserRepository;
+import com.example.bugtracker_backend.utils.JwtUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -23,6 +25,9 @@ class UserServiceTest {
 
     @Mock
     private BCryptPasswordEncoder passwordEncoder;
+
+    @Mock
+    private JwtUtils jwtUtils;
 
     @InjectMocks
     private UserService userService;
@@ -56,21 +61,23 @@ class UserServiceTest {
     }
 
     @Test
-    void registerNewUser_ShouldRegisterSuccessfully() {
+    void registerUserAccount_ShouldRegisterSuccessfullyAccount() {
         // Arrange
         when(userRepository.existsByEmail(registerRequest.getEmail())).thenReturn(false);
         when(passwordEncoder.encode(registerRequest.getPassword())).thenReturn("hashed_password");
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(jwtUtils.generateToken(user.getEmail())).thenReturn("jwtToken");
 
         // Act
-        User registeredUser = userService.registerNewUser(registerRequest);
+        AuthenticationResponse registeredUser = userService.registerUserAccount(registerRequest);
 
         // Assert
         assertNotNull(registeredUser);
-        assertEquals("test@example.com", registeredUser.getEmail());
-        assertEquals("hashed_password", registeredUser.getPasswordHash());
-        assertEquals("John", registeredUser.getFirstName());
-        assertEquals("Doe", registeredUser.getSecondName());
+        assertEquals("test@example.com", registeredUser.getUserData().getEmail());
+        assertEquals("John", registeredUser.getUserData().getFirstName());
+        assertEquals("Doe", registeredUser.getUserData().getLastName());
+        assertNull(registeredUser.getUserData().getRole());
+        assertEquals("jwtToken", registeredUser.getToken());
 
         verify(userRepository).existsByEmail(registerRequest.getEmail());
         verify(passwordEncoder).encode(registerRequest.getPassword());
@@ -78,7 +85,7 @@ class UserServiceTest {
     }
 
     @Test
-    void registerNewUser_ShouldThrowException_WhenUserAlreadyExists() {
+    void registerUserAccount_ShouldThrowException_WhenUserAlreadyExists() {
         // Arrange
         registerRequest.setEmail("test@example.com");
 
@@ -86,7 +93,7 @@ class UserServiceTest {
 
         // Act & Assert
         assertThrows(ConflictException.class, () -> {
-            userService.registerNewUser(registerRequest);
+            userService.registerUserAccount(registerRequest);
         });
 
         verify(userRepository).existsByEmail(registerRequest.getEmail());
@@ -94,7 +101,7 @@ class UserServiceTest {
     }
 
     @Test
-    void loginUser_ShouldLoginSuccessfully() {
+    void authenticateUser_ShouldAuthenticateSuccessfully() {
         // Arrange
         User user = new User();
         user.setEmail("test@example.com");
@@ -105,21 +112,22 @@ class UserServiceTest {
 
         when(userRepository.findByEmail("test@example.com")).thenReturn(user);
         when(passwordEncoder.matches("password123", "hashed_password")).thenReturn(true);
+        when(jwtUtils.generateToken(user.getEmail())).thenReturn("jwtToken");
 
         // Act
-        User loggedInUser = userService.loginUser(loginRequest);
+        AuthenticationResponse loggedInUserData = userService.authenticateUser(loginRequest);
 
         // Assert
-        assertNotNull(loggedInUser);
-        assertEquals("test@example.com", loggedInUser.getEmail());
-        assertEquals("hashed_password", loggedInUser.getPasswordHash());
-        assertEquals("John", loggedInUser.getFirstName());
-        assertEquals("Doe", loggedInUser.getSecondName());
-        assertNull(loggedInUser.getRole());
+        assertNotNull(loggedInUserData);
+        assertEquals("test@example.com", loggedInUserData.getUserData().getEmail());
+        assertEquals("John", loggedInUserData.getUserData().getFirstName());
+        assertEquals("Doe", loggedInUserData.getUserData().getLastName());
+        assertNull(loggedInUserData.getUserData().getRole());
+        assertEquals("jwtToken", loggedInUserData.getToken());
     }
 
     @Test
-    void loginUser_ShouldThrowException_WhenUserNotFound() {
+    void authenticateUser_ShouldThrowException_WhenUserNotFound() {
         // Arrange
         loginRequest.setEmail("test@example.com");
 
@@ -128,7 +136,7 @@ class UserServiceTest {
 
         // Act & Assert
         assertThrows(BadRequestException.class, () -> {
-            userService.loginUser(loginRequest);
+            userService.authenticateUser(loginRequest);
         });
     }
 
@@ -142,7 +150,7 @@ class UserServiceTest {
 
         // Act & Assert
         assertThrows(BadRequestException.class, () -> {
-            userService.loginUser(loginRequest);
+            userService.authenticateUser(loginRequest);
         });
     }
 }

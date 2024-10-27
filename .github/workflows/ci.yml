@@ -36,7 +36,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: '17'
-          distribution: 'temurin' # This field specifies the JDK distribution
+          distribution: 'temurin'
 
       - name: Set up Gradle wrapper permissions
         run: chmod +x ./gradlew

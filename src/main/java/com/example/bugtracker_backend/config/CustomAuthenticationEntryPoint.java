@@ -11,10 +11,11 @@ import java.io.IOException;
 public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
     @Override
-    public void commence(HttpServletRequest request, HttpServletResponse response,
-                         org.springframework.security.core.AuthenticationException authException) throws IOException {
+    public void commence(HttpServletRequest request, HttpServletResponse response, org.springframework.security.core.AuthenticationException authException) throws IOException {
         response.setContentType("application/json");
+
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+
         response.getOutputStream().println("{ \"error\": \"Unauthorized access. Please provide a valid token.\" }");
     }
 }

@@ -19,7 +19,7 @@ public class Stats {
 
     @Column(name = "solved_bugs", nullable = false, columnDefinition = "integer DEFAULT 0")
     private Integer solvedBugs;
-
+ 
     @OneToOne
     @MapsId
     @JoinColumn(name = "user_id")

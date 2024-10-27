@@ -3,8 +3,8 @@ package com.example.bugtracker_backend.controllers;
 import com.example.bugtracker_backend.dto.AuthenticationResponse;
 import com.example.bugtracker_backend.dto.LoginRequest;
 import com.example.bugtracker_backend.dto.RegisterRequest;
+import com.example.bugtracker_backend.dto.UserData;
 import com.example.bugtracker_backend.exceptions.ConflictException;
-import com.example.bugtracker_backend.models.User;
 import com.example.bugtracker_backend.services.UserService;
 import com.example.bugtracker_backend.utils.JwtUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,8 +19,7 @@ import java.util.Objects;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
-public class AuthControllerTest
-{
+public class AuthControllerTest {
     @Mock
     private UserService userService;
 
@@ -49,22 +48,16 @@ public class AuthControllerTest
     }
 
     @Test
-    void register_ShouldReturnUserDataWithToken() {
+    void registerUserAccount_ShouldReturnUserDataWithToken() {
         // Arrange
-        User savedUser = new User();
-        savedUser.setId(1);
-        savedUser.setEmail("test@example.com");
-        savedUser.setPasswordHash("passwordHash");
-        savedUser.setFirstName("John");
-        savedUser.setSecondName("Doe");
-        savedUser.setRole(null);
+        String token = "jwtToken";
+        UserData userData = new UserData(1, "John", "Doe", "test@example.com", null);
+        AuthenticationResponse authenticationResponse = new AuthenticationResponse(token, userData);
 
-        when(userService.registerNewUser(registerRequest)).thenReturn(savedUser);
-
-        when(jwtUtils.generateToken(registerRequest.getEmail())).thenReturn("jwtToken");
+        when(userService.registerUserAccount(registerRequest)).thenReturn(authenticationResponse);
 
         // Act
-        ResponseEntity<AuthenticationResponse> response = authController.register(registerRequest);
+        ResponseEntity<AuthenticationResponse> response = authController.registerUser(registerRequest);
 
         // Assert
         assertNotNull(response);
@@ -77,31 +70,24 @@ public class AuthControllerTest
     }
 
     @Test
-    void register_ShouldThrowConflictExceptionWhenUserAlreadyExists() {
+    void registerUserAccount_ShouldThrowConflictExceptionWhenUserAlreadyExists() {
         // Arrange
-        when(userService.registerNewUser(registerRequest)).thenThrow(new ConflictException("Email is already in use"));
+        when(userService.registerUserAccount(registerRequest)).thenThrow(new ConflictException("Email is already in use"));
 
         // Act & Assert
-        assertThrows(ConflictException.class, () -> authController.register(registerRequest));
+        assertThrows(ConflictException.class, () -> authController.registerUser(registerRequest));
     }
 
     @Test
-    void login_ShouldReturnUserDataWithToken() {
+    void authenticate_ShouldReturnUserDataWithToken() {
         // Arrange
-        User foundUser = new User();
-        foundUser.setId(1);
-        foundUser.setEmail("test@example.com");
-        foundUser.setPasswordHash("passwordHash");
-        foundUser.setFirstName("John");
-        foundUser.setSecondName("Doe");
-        foundUser.setRole(null);
+        String token = "jwtToken";
+        UserData userData = new UserData(1, "John", "Doe", "test@example.com", null);
+        AuthenticationResponse authenticationResponse = new AuthenticationResponse(token, userData);
 
-        when(userService.loginUser(loginRequest)).thenReturn(foundUser);
-
-        when(jwtUtils.generateToken(loginRequest.getEmail())).thenReturn("jwtToken");
-
+        when(userService.authenticateUser(loginRequest)).thenReturn(authenticationResponse);
         // Act
-        ResponseEntity<AuthenticationResponse> response = authController.login(loginRequest);
+        ResponseEntity<AuthenticationResponse> response = authController.authenticate(loginRequest);
 
         // Assert
         assertNotNull(response);
@@ -114,11 +100,11 @@ public class AuthControllerTest
     }
 
     @Test
-    void login_ShouldThrowConflictExceptionWhenUserAlreadyExists() {
+    void authenticate_ShouldThrowConflictExceptionWhenUserAlreadyExists() {
         // Arrange
-        when(userService.loginUser(loginRequest)).thenThrow(new ConflictException("Email is already in use"));
+        when(userService.authenticateUser(loginRequest)).thenThrow(new ConflictException("Email is already in use"));
 
         // Act & Assert
-        assertThrows(ConflictException.class, () -> authController.login(loginRequest));
+        assertThrows(ConflictException.class, () -> authController.authenticate(loginRequest));
     }
 }

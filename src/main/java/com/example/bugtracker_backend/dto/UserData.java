@@ -14,4 +14,4 @@ public class UserData {
     String lastName;
     String email;
     UsersRole role;
-}
+} 

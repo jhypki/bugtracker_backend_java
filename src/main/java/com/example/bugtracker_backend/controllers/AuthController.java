@@ -3,8 +3,6 @@ package com.example.bugtracker_backend.controllers;
 import com.example.bugtracker_backend.dto.AuthenticationResponse;
 import com.example.bugtracker_backend.dto.LoginRequest;
 import com.example.bugtracker_backend.dto.RegisterRequest;
-import com.example.bugtracker_backend.dto.UserData;
-import com.example.bugtracker_backend.models.User;
 import com.example.bugtracker_backend.services.UserService;
 import com.example.bugtracker_backend.utils.JwtUtils;
 import jakarta.validation.Valid;
@@ -26,28 +24,14 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<AuthenticationResponse> register(@Valid @RequestBody RegisterRequest registerRequest) {
-        User savedUser = userService.registerNewUser(registerRequest);
-
-        String jwtToken = jwtUtils.generateToken(savedUser.getEmail());
-
-        UserData userData = new UserData(savedUser.getId(), savedUser.getFirstName(), savedUser.getSecondName(), savedUser.getEmail(), savedUser.getRole());
-
-        AuthenticationResponse response = new AuthenticationResponse(jwtToken, userData);
-
+    public ResponseEntity<AuthenticationResponse> registerUser(@Valid @RequestBody RegisterRequest registerRequest) {
+        AuthenticationResponse response = userService.registerUserAccount(registerRequest);
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthenticationResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
-        User foundUser = userService.loginUser(loginRequest);
-
-        String jwtToken = jwtUtils.generateToken(foundUser.getEmail());
-
-        UserData userData = new UserData(foundUser.getId(), foundUser.getFirstName(), foundUser.getSecondName(), foundUser.getEmail(), foundUser.getRole());
-
-        AuthenticationResponse response = new AuthenticationResponse(jwtToken, userData);
-
+    public ResponseEntity<AuthenticationResponse> authenticate(@Valid @RequestBody LoginRequest loginRequest) {
+        AuthenticationResponse response = userService.authenticateUser(loginRequest);
         return ResponseEntity.ok(response);
     }
 }

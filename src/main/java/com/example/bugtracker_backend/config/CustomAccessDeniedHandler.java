@@ -11,15 +11,14 @@ import java.io.IOException;
 
 @Component
 public class CustomAccessDeniedHandler implements AccessDeniedHandler {
-
+ 
     @Override
-    public void handle(HttpServletRequest request,
-                       HttpServletResponse response,
-                       AccessDeniedException accessDeniedException) throws IOException, ServletException {
+    public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException, ServletException {
 
         response.setContentType("application/json");
         response.setStatus(HttpServletResponse.SC_FORBIDDEN);
 
-        response.getOutputStream().println("{ \"error\": \"Access Denied. You do not have permission to access this resource.\" }");
+        response.getOutputStream()
+                .println("{ \"error\": \"Access Denied. You do not have permission to access this resource.\" }");
     }
 }

@@ -1,5 +1,6 @@
 package com.example.bugtracker_backend.services;
 
+import com.example.bugtracker_backend.dto.AuthenticationResponse;
 import com.example.bugtracker_backend.dto.LoginRequest;
 import com.example.bugtracker_backend.dto.RegisterRequest;
 import com.example.bugtracker_backend.dto.UserData;
@@ -8,6 +9,7 @@ import com.example.bugtracker_backend.exceptions.ConflictException;
 import com.example.bugtracker_backend.mappers.UserDataMapper;
 import com.example.bugtracker_backend.models.User;
 import com.example.bugtracker_backend.repositories.UserRepository;
+import com.example.bugtracker_backend.utils.JwtUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -19,15 +21,15 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final UserDataMapper userDataMapper;
+    private final JwtUtils jwtUtils;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, UserDataMapper userDataMapper) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtUtils jwtUtils) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
-        this.userDataMapper = userDataMapper;
+        this.jwtUtils = jwtUtils;
     }
 
-    public User registerNewUser(RegisterRequest registerRequest) {
+    public AuthenticationResponse registerUserAccount(RegisterRequest registerRequest) {
         if (userRepository.existsByEmail(registerRequest.getEmail())) {
             throw new ConflictException("Email is already in use");
         }
@@ -38,13 +40,19 @@ public class UserService {
         user.setFirstName(registerRequest.getFirstName());
         user.setSecondName(registerRequest.getLastName());
 
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+
+        UserData userData = UserDataMapper.toUserData(savedUser);
+
+        String token = jwtUtils.generateToken(user.getEmail());
+
+        return new AuthenticationResponse(token, userData);
     }
 
-    public User loginUser(LoginRequest loginRequest) {
+    public AuthenticationResponse authenticateUser(LoginRequest loginRequest) {
         User user = userRepository.findByEmail(loginRequest.getEmail());
 
-        if (user == null){
+        if (user == null) {
             throw new BadRequestException("User not found");
         }
 
@@ -52,19 +60,20 @@ public class UserService {
             throw new BadRequestException("Invalid password");
         }
 
-        return user;
+        String token = jwtUtils.generateToken(user.getEmail());
+
+        return new AuthenticationResponse(token, UserDataMapper.toUserData(user));
     }
+
 
     public List<UserData> getAllUsers() {
         List<User> users = userRepository.findAll();
 
-        if(users.isEmpty()) {
+        if (users.isEmpty()) {
             throw new BadRequestException("No users found");
         }
 
-        return users.stream()
-                .map(UserDataMapper::toUserData)
-                .toList();
+        return users.stream().map(UserDataMapper::toUserData).toList();
     }
 
     public Optional<UserData> getUserById(Integer id) {
@@ -76,7 +85,6 @@ public class UserService {
 
         return user.map(UserDataMapper::toUserData);
     }
-
 
     public Optional<UserData> getUserByEmail(String email) {
         Optional<User> user = Optional.ofNullable(userRepository.findByEmail(email));

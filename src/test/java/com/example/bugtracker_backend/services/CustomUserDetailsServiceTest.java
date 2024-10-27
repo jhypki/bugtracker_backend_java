@@ -44,7 +44,9 @@ class CustomUserDetailsServiceTest {
         assertNotNull(userDetails);
         assertEquals("test@example.com", userDetails.getUsername());
         assertEquals("passwordHash", userDetails.getPassword());
-        assertTrue(userDetails.getAuthorities().stream().anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_ADMIN")));
+        assertTrue(userDetails.getAuthorities()
+                .stream()
+                .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_ADMIN")));
     }
 
     @Test
@@ -65,7 +67,7 @@ class CustomUserDetailsServiceTest {
         mockUser.setEmail("user@example.com");
         mockUser.setPasswordHash("passwordHash");
         mockUser.setRole(null);
-
+ 
         when(userRepository.findByEmail("user@example.com")).thenReturn(mockUser);
 
         // Act
@@ -75,6 +77,8 @@ class CustomUserDetailsServiceTest {
         assertNotNull(userDetails);
         assertEquals("user@example.com", userDetails.getUsername());
         assertEquals("passwordHash", userDetails.getPassword());
-        assertTrue(userDetails.getAuthorities().stream().anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_USER")));
+        assertTrue(userDetails.getAuthorities()
+                .stream()
+                .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_USER")));
     }
 }

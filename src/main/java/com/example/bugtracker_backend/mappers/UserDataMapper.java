@@ -11,13 +11,7 @@ public class UserDataMapper {
         if (user == null) {
             return null;
         }
-        return new UserData(
-                user.getId(),
-                user.getFirstName(),
-                user.getSecondName(),
-                user.getEmail(),
-                user.getRole()
-        );
+        return new UserData(user.getId(), user.getFirstName(), user.getSecondName(), user.getEmail(), user.getRole());
     }
 
     public static User toUser(UserData userData) {
