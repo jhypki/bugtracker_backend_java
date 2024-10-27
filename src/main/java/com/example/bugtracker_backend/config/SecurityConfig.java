@@ -52,14 +52,14 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
- 
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth.requestMatchers("/api/auth/**")
                         .permitAll()
                         .requestMatchers("/api/users/**")
-                        .hasAnyRole(UsersRole.ADMIN.name(), UsersRole.PROGRAMMER.name(), UsersRole.SUPPORT.name())
+                        .hasAnyRole(UsersRole.ADMIN.toString(), UsersRole.PROGRAMMER.toString(), UsersRole.SUPPORT.toString())
                         .anyRequest()
                         .authenticated())
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(customAuthenticationEntryPoint))

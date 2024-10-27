@@ -21,11 +21,11 @@ SET row_security = off;
 --
 
 CREATE TYPE public.bug_status AS ENUM (
-    'opened',
-    'closed',
-    'in progress',
-    'done'
-);
+    'OPENED',
+    'CLOSED',
+    'IN PROGRESS',
+    'DONE'
+    );
 
 
 ALTER TYPE public.bug_status OWNER TO postgres;
@@ -35,10 +35,10 @@ ALTER TYPE public.bug_status OWNER TO postgres;
 --
 
 CREATE TYPE public.severity AS ENUM (
-    'low',
-    'medium',
-    'high'
-);
+    'LOW',
+    'MEDIUM',
+    'HIGH'
+    );
 
 
 ALTER TYPE public.severity OWNER TO postgres;
@@ -48,10 +48,10 @@ ALTER TYPE public.severity OWNER TO postgres;
 --
 
 CREATE TYPE public.users_role AS ENUM (
-    'admin',
-    'support',
-    'programmer'
-);
+    'ADMIN',
+    'SUPPORT',
+    'PROGRAMMER'
+    );
 
 
 ALTER TYPE public.users_role OWNER TO postgres;
@@ -64,19 +64,21 @@ SET default_table_access_method = heap;
 -- Name: bugs; Type: TABLE; Schema: public; Owner: postgres
 --
 
-CREATE TABLE public.bugs (
-    id integer NOT NULL,
-    title text,
+CREATE TABLE public.bugs
+(
+    id          integer NOT NULL,
+    title       text,
     description text,
-    status public.bug_status,
-    created timestamp without time zone,
-    reporter integer,
+    status      public.bug_status,
+    created     timestamp without time zone,
+    reporter    integer,
     assigned_to integer,
-    severity public.severity
+    severity    public.severity
 );
 
 
-ALTER TABLE public.bugs OWNER TO postgres;
+ALTER TABLE public.bugs
+    OWNER TO postgres;
 
 --
 -- Name: bugs_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -104,43 +106,49 @@ ALTER SEQUENCE public.bugs_id_seq OWNED BY public.bugs.id;
 -- Name: comments; Type: TABLE; Schema: public; Owner: postgres
 --
 
-CREATE TABLE public.comments (
-    bug_id integer,
-    comment text,
-    user_id integer,
+CREATE TABLE public.comments
+(
+    bug_id     integer,
+    comment    text,
+    user_id    integer,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
 
-ALTER TABLE public.comments OWNER TO postgres;
+ALTER TABLE public.comments
+    OWNER TO postgres;
 
 --
 -- Name: stats; Type: TABLE; Schema: public; Owner: postgres
 --
 
-CREATE TABLE public.stats (
-    user_id integer NOT NULL,
+CREATE TABLE public.stats
+(
+    user_id     integer           NOT NULL,
     solved_bugs integer DEFAULT 0 NOT NULL
 );
 
 
-ALTER TABLE public.stats OWNER TO postgres;
+ALTER TABLE public.stats
+    OWNER TO postgres;
 
 --
 -- Name: users; Type: TABLE; Schema: public; Owner: postgres
 --
 
-CREATE TABLE public.users (
-    id integer NOT NULL,
-    first_name character varying(30),
-    second_name character varying(30),
-    email character varying(30),
+CREATE TABLE public.users
+(
+    id            integer NOT NULL,
+    first_name    character varying(30),
+    second_name   character varying(30),
+    email         character varying(30),
     password_hash character varying(255),
-    role public.users_role
+    role          public.users_role
 );
 
 
-ALTER TABLE public.users OWNER TO postgres;
+ALTER TABLE public.users
+    OWNER TO postgres;
 
 --
 -- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -168,14 +176,16 @@ ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
 -- Name: bugs id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public.bugs ALTER COLUMN id SET DEFAULT nextval('public.bugs_id_seq'::regclass);
+ALTER TABLE ONLY public.bugs
+    ALTER COLUMN id SET DEFAULT nextval('public.bugs_id_seq'::regclass);
 
 
 --
 -- Name: users id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
+ALTER TABLE ONLY public.users
+    ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
 
 
 --
@@ -207,7 +217,7 @@ ALTER TABLE ONLY public.users
 --
 
 ALTER TABLE ONLY public.bugs
-    ADD CONSTRAINT bugs_assigned_to_fkey FOREIGN KEY (assigned_to) REFERENCES public.users(id);
+    ADD CONSTRAINT bugs_assigned_to_fkey FOREIGN KEY (assigned_to) REFERENCES public.users (id);
 
 
 --
@@ -215,7 +225,7 @@ ALTER TABLE ONLY public.bugs
 --
 
 ALTER TABLE ONLY public.bugs
-    ADD CONSTRAINT bugs_reporter_fkey FOREIGN KEY (reporter) REFERENCES public.users(id);
+    ADD CONSTRAINT bugs_reporter_fkey FOREIGN KEY (reporter) REFERENCES public.users (id);
 
 
 --
@@ -223,7 +233,7 @@ ALTER TABLE ONLY public.bugs
 --
 
 ALTER TABLE ONLY public.comments
-    ADD CONSTRAINT comments_bug_id_fkey FOREIGN KEY (bug_id) REFERENCES public.bugs(id);
+    ADD CONSTRAINT comments_bug_id_fkey FOREIGN KEY (bug_id) REFERENCES public.bugs (id);
 
 
 --
@@ -231,7 +241,7 @@ ALTER TABLE ONLY public.comments
 --
 
 ALTER TABLE ONLY public.comments
-    ADD CONSTRAINT comments_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
+    ADD CONSTRAINT comments_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users (id);
 
 
 --
@@ -239,7 +249,7 @@ ALTER TABLE ONLY public.comments
 --
 
 ALTER TABLE ONLY public.stats
-    ADD CONSTRAINT stats_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
+    ADD CONSTRAINT stats_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users (id);
 
 CREATE CAST (character varying AS users_role) with inout as assignment;
 CREATE CAST (character varying AS bug_status) with inout as assignment;
