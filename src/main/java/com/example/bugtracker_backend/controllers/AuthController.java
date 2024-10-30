@@ -16,11 +16,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/auth")
 public class AuthController {
     private final UserService userService;
-    private final JwtUtils jwtUtils;
 
-    public AuthController(UserService userService, JwtUtils jwtUtils) {
+    public AuthController(UserService userService) {
         this.userService = userService;
-        this.jwtUtils = jwtUtils;
     }
 
     @PostMapping("/register")
