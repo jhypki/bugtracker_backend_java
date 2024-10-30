@@ -54,7 +54,7 @@ public class JwtUtilsTest {
 
     @ParameterizedTest
     @NullAndEmptySource
-    @ValueSource(strings = {" "})
+    @ValueSource(strings = {" ", ""})
     void extractEmail_InvalidOrEmptyToken_ThrowsIllegalArgumentException(String token) {
         // Act & Assert
         assertThrows(IllegalArgumentException.class, () -> {

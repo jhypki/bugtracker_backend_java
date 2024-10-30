@@ -9,7 +9,9 @@ import com.example.bugtracker_backend.exceptions.ConflictException;
 import com.example.bugtracker_backend.mappers.UserDataMapper;
 import com.example.bugtracker_backend.models.User;
 import com.example.bugtracker_backend.repositories.UserRepository;
+import com.example.bugtracker_backend.utils.CaptchaUtils;
 import com.example.bugtracker_backend.utils.JwtUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -22,14 +24,21 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
+    private final CaptchaUtils captchaUtils;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtUtils jwtUtils) {
+    @Value("${enable.captcha:true}")
+    private Boolean isCaptchaEnabled;
+
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtUtils jwtUtils, CaptchaUtils captchaUtils) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtils = jwtUtils;
+        this.captchaUtils = captchaUtils;
     }
 
     public AuthenticationResponse registerUserAccount(RegisterRequest registerRequest) {
+        validateCaptchaToken(registerRequest.getCaptchaToken());
+
         if (userRepository.existsByEmail(registerRequest.getEmail())) {
             throw new ConflictException("Email is already in use");
         }
@@ -50,6 +59,8 @@ public class UserService {
     }
 
     public AuthenticationResponse authenticateUser(LoginRequest loginRequest) {
+        validateCaptchaToken(loginRequest.getCaptchaToken());
+
         User user = userRepository.findByEmail(loginRequest.getEmail());
 
         if (user == null) {
@@ -64,7 +75,6 @@ public class UserService {
 
         return new AuthenticationResponse(token, UserDataMapper.toUserData(user));
     }
-
 
     public List<UserData> getAllUsers() {
         List<User> users = userRepository.findAll();
@@ -94,5 +104,14 @@ public class UserService {
         }
 
         return user.map(UserDataMapper::toUserData);
+    }
+
+    private void validateCaptchaToken(String captchaToken) {
+        if (!isCaptchaEnabled) {
+            return;
+        }
+        if (!captchaUtils.verifyCaptcha(captchaToken)) {
+            throw new BadRequestException("Invalid captcha token");
+        }
     }
 }
