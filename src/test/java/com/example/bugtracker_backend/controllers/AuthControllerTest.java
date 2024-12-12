@@ -23,9 +23,6 @@ public class AuthControllerTest {
     @Mock
     private UserService userService;
 
-    @Mock
-    private JwtUtils jwtUtils;
-
     @InjectMocks
     private AuthController authController;
 
