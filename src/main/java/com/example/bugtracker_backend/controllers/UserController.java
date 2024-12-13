@@ -13,7 +13,7 @@ import java.util.Optional;
 public class UserController {
 
     private final UserService userService;
- 
+
     public UserController(UserService userService) {
         this.userService = userService;
     }
@@ -31,5 +31,10 @@ public class UserController {
     @GetMapping("/email")
     public ResponseEntity<Optional<UserData>> getUserByEmail(@RequestParam String email) {
         return ResponseEntity.ok(userService.getUserByEmail(email));
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<UserData> updateUserRole(@PathVariable Integer id, @RequestParam String role) {
+        return ResponseEntity.ok(userService.updateUserRole(id, role));
     }
 }

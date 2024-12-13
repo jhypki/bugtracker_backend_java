@@ -8,8 +8,10 @@ import com.example.bugtracker_backend.exceptions.BadRequestException;
 import com.example.bugtracker_backend.exceptions.ConflictException;
 import com.example.bugtracker_backend.mappers.UserDataMapper;
 import com.example.bugtracker_backend.models.User;
+import com.example.bugtracker_backend.models.UsersRole;
 import com.example.bugtracker_backend.repositories.UserRepository;
 import com.example.bugtracker_backend.utils.CaptchaUtils;
+import com.example.bugtracker_backend.utils.EnumUtils;
 import com.example.bugtracker_backend.utils.JwtUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -104,6 +106,23 @@ public class UserService {
         }
 
         return user.map(UserDataMapper::toUserData);
+    }
+
+    public UserData updateUserRole(Integer id, String role) {
+        Optional<User> user = userRepository.findById(id);
+
+        if (user.isEmpty()) {
+            throw new BadRequestException("User not found");
+        }
+
+        if (!EnumUtils.isValidEnum(UsersRole.class, role)) {
+            throw new BadRequestException("Invalid role");
+        }
+
+        user.get().setRole(UsersRole.valueOf(role));
+        User updatedUser = userRepository.save(user.get());
+
+        return UserDataMapper.toUserData(updatedUser);
     }
 
     private void validateCaptchaToken(String captchaToken) {
