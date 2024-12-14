@@ -31,7 +31,7 @@ public class GlobalExceptionHandler {
         List<String> errors = new ArrayList<>();
         errors.add(ex.getMessage());
 
-        ErrorResponse errorResponse = new ErrorResponse(errors.getFirst(), errors);
+        ErrorResponse errorResponse = new ErrorResponse(errors.get(0), errors);
 
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
@@ -41,7 +41,7 @@ public class GlobalExceptionHandler {
         List<String> errors = new ArrayList<>();
         errors.add(ex.getMessage());
 
-        ErrorResponse errorResponse = new ErrorResponse(errors.getFirst(), errors);
+        ErrorResponse errorResponse = new ErrorResponse(errors.get(0), errors);
 
         return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
     }
@@ -51,7 +51,7 @@ public class GlobalExceptionHandler {
         List<String> errors = new ArrayList<>();
         errors.add(ex.getMessage());
 
-        ErrorResponse errorResponse = new ErrorResponse(errors.getFirst(), errors);
+        ErrorResponse errorResponse = new ErrorResponse(errors.get(0), errors);
 
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }

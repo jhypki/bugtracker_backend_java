@@ -49,12 +49,12 @@ public class UserControllerTest {
     @Test
     void getUserById_ShouldReturnUserById() {
         // Arrange
-        when(userService.getUserById(1)).thenReturn((usersData.getFirst()));
+        when(userService.getUserById(1)).thenReturn((usersData.get(0)));
 
         // Act
         ResponseEntity<UserData> response = userController.getUserById(1);
 
         // Assert
-        assertEquals(usersData.getFirst(), response.getBody());
+        assertEquals(usersData.get(0), response.getBody());
     }
 }
