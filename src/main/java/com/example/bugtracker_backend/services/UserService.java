@@ -6,6 +6,7 @@ import com.example.bugtracker_backend.dto.RegisterRequest;
 import com.example.bugtracker_backend.dto.UserData;
 import com.example.bugtracker_backend.exceptions.BadRequestException;
 import com.example.bugtracker_backend.exceptions.ConflictException;
+import com.example.bugtracker_backend.exceptions.NotFoundException;
 import com.example.bugtracker_backend.mappers.UserDataMapper;
 import com.example.bugtracker_backend.models.User;
 import com.example.bugtracker_backend.models.UsersRole;
@@ -88,24 +89,20 @@ public class UserService {
         return users.stream().map(UserDataMapper::toUserData).toList();
     }
 
-    public Optional<UserData> getUserById(Integer id) {
+    public UserData getUserById(Integer id) {
         Optional<User> user = userRepository.findById(id);
 
-        if (user.isEmpty()) {
-            throw new BadRequestException("User not found");
-        }
+        checkIfUserExists(user.orElse(null));
 
-        return user.map(UserDataMapper::toUserData);
+        return UserDataMapper.toUserData(user.get());
     }
 
-    public Optional<UserData> getUserByEmail(String email) {
+    public UserData getUserByEmail(String email) {
         Optional<User> user = Optional.ofNullable(userRepository.findByEmail(email));
 
-        if (user.isEmpty()) {
-            throw new BadRequestException("User not found");
-        }
+        checkIfUserExists(user.orElse(null));
 
-        return user.map(UserDataMapper::toUserData);
+        return UserDataMapper.toUserData(user.get());
     }
 
     public UserData updateUserRole(Integer id, String role) {
@@ -131,6 +128,12 @@ public class UserService {
         }
         if (!captchaUtils.verifyCaptcha(captchaToken)) {
             throw new BadRequestException("Invalid captcha token");
+        }
+    }
+
+    private void checkIfUserExists(User user) {
+        if (user == null) {
+            throw new NotFoundException("User not found");
         }
     }
 }
