@@ -21,6 +21,11 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Service class for managing user-related operations, such as registration,
+ * authentication,
+ * user retrieval, and role updates.
+ */
 @Service
 public class UserService {
 
@@ -32,13 +37,30 @@ public class UserService {
     @Value("${enable.captcha:true}")
     private Boolean isCaptchaEnabled;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtUtils jwtUtils, CaptchaUtils captchaUtils) {
+    /**
+     * Constructor for UserService.
+     *
+     * @param userRepository  the user repository
+     * @param passwordEncoder the password encoder
+     * @param jwtUtils        the JWT utility
+     * @param captchaUtils    the captcha utility
+     */
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtUtils jwtUtils,
+            CaptchaUtils captchaUtils) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtils = jwtUtils;
         this.captchaUtils = captchaUtils;
     }
 
+    /**
+     * Registers a new user account.
+     *
+     * @param registerRequest the registration request containing user details and
+     *                        captcha token
+     * @return an authentication response with a JWT token and user data
+     * @throws ConflictException if the email is already in use
+     */
     public AuthenticationResponse registerUserAccount(RegisterRequest registerRequest) {
         validateCaptchaToken(registerRequest.getCaptchaToken());
 
@@ -61,6 +83,15 @@ public class UserService {
         return new AuthenticationResponse(token, userData);
     }
 
+    /**
+     * Authenticates a user using email and password.
+     *
+     * @param loginRequest the login request containing email, password, and captcha
+     *                     token
+     * @return an authentication response with a JWT token and user data
+     * @throws BadRequestException if the user is not found or the password is
+     *                             invalid
+     */
     public AuthenticationResponse authenticateUser(LoginRequest loginRequest) {
         validateCaptchaToken(loginRequest.getCaptchaToken());
 
@@ -79,6 +110,12 @@ public class UserService {
         return new AuthenticationResponse(token, UserDataMapper.toUserData(user));
     }
 
+    /**
+     * Retrieves all users.
+     *
+     * @return a list of user data
+     * @throws BadRequestException if no users are found
+     */
     public List<UserData> getAllUsers() {
         List<User> users = userRepository.findAll();
 
@@ -89,6 +126,13 @@ public class UserService {
         return users.stream().map(UserDataMapper::toUserData).toList();
     }
 
+    /**
+     * Retrieves a user by their ID.
+     *
+     * @param id the user ID
+     * @return the user data
+     * @throws NotFoundException if the user is not found
+     */
     public UserData getUserById(Integer id) {
         Optional<User> user = userRepository.findById(id);
 
@@ -97,6 +141,13 @@ public class UserService {
         return UserDataMapper.toUserData(user.get());
     }
 
+    /**
+     * Retrieves a user by their email.
+     *
+     * @param email the user email
+     * @return the user data
+     * @throws NotFoundException if the user is not found
+     */
     public UserData getUserByEmail(String email) {
         Optional<User> user = Optional.ofNullable(userRepository.findByEmail(email));
 
@@ -105,6 +156,14 @@ public class UserService {
         return UserDataMapper.toUserData(user.get());
     }
 
+    /**
+     * Updates the role of a user.
+     *
+     * @param id   the user ID
+     * @param role the new role
+     * @return the updated user data
+     * @throws BadRequestException if the user is not found or the role is invalid
+     */
     public UserData updateUserRole(Integer id, String role) {
         Optional<User> user = userRepository.findById(id);
 
@@ -122,6 +181,12 @@ public class UserService {
         return UserDataMapper.toUserData(updatedUser);
     }
 
+    /**
+     * Validates the provided captcha token if captcha validation is enabled.
+     *
+     * @param captchaToken the captcha token to validate
+     * @throws BadRequestException if the captcha token is invalid
+     */
     private void validateCaptchaToken(String captchaToken) {
         if (!isCaptchaEnabled) {
             return;
@@ -131,6 +196,12 @@ public class UserService {
         }
     }
 
+    /**
+     * Checks if a user exists.
+     *
+     * @param user the user to check
+     * @throws NotFoundException if the user is null
+     */
     private void checkIfUserExists(User user) {
         if (user == null) {
             throw new NotFoundException("User not found");

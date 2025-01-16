@@ -7,6 +7,21 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * UserController is a REST controller that handles HTTP requests related to
+ * user operations.
+ * It provides endpoints to retrieve all users, retrieve a user by ID, retrieve
+ * a user by email,
+ * and update a user's role.
+ * 
+ * Endpoints:
+ * - GET /api/users: Retrieves a list of all users.
+ * - GET /api/users/{id}: Retrieves a user by their ID.
+ * - GET /api/users/email: Retrieves a user by their email.
+ * - PATCH /api/users/{id}: Updates a user's role.
+ * 
+ * @author
+ */
 @RestController
 @RequestMapping("/api/users")
 public class UserController {

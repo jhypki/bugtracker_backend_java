@@ -1,10 +1,4 @@
---
--- PostgreSQL database dump
---
-
--- Dumped from database version 16.2 (Debian 16.2-1.pgdg120+2)
--- Dumped by pg_dump version 16.2 (Debian 16.2-1.pgdg120+2)
-
+-- Set up database and configurations
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
@@ -16,244 +10,103 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
---
--- Name: bug_status; Type: TYPE; Schema: public; Owner: postgres
---
+-- Create ENUM types if they don't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'bug_status') THEN
+CREATE TYPE public.bug_status AS ENUM ('OPENED', 'CLOSED', 'IN PROGRESS', 'DONE');
+END IF;
 
-CREATE TYPE public.bug_status AS ENUM (
-    'OPENED',
-    'CLOSED',
-    'IN PROGRESS',
-    'DONE'
-    );
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'severity') THEN
+CREATE TYPE public.severity AS ENUM ('LOW', 'MEDIUM', 'HIGH');
+END IF;
 
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'users_role') THEN
+CREATE TYPE public.users_role AS ENUM ('ADMIN', 'SUPPORT', 'PROGRAMMER');
+END IF;
+END $$;
 
-ALTER TYPE public.bug_status OWNER TO postgres;
-
---
--- Name: severity; Type: TYPE; Schema: public; Owner: postgres
---
-
-CREATE TYPE public.severity AS ENUM (
-    'LOW',
-    'MEDIUM',
-    'HIGH'
-    );
-
-
-ALTER TYPE public.severity OWNER TO postgres;
-
---
--- Name: users_role; Type: TYPE; Schema: public; Owner: postgres
---
-
-CREATE TYPE public.users_role AS ENUM (
-    'ADMIN',
-    'SUPPORT',
-    'PROGRAMMER'
-    );
-
-
-ALTER TYPE public.users_role OWNER TO postgres;
-
-SET default_tablespace = '';
-
-SET default_table_access_method = heap;
-
---
--- Name: bugs; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.bugs
+-- Create tables if they don't exist
+CREATE TABLE IF NOT EXISTS public.users
 (
-    id          integer NOT NULL,
-    title       text,
-    description text,
-    status      public.bug_status,
-    created     timestamp without time zone,
-    reporter    integer,
-    assigned_to integer,
-    severity    public.severity
-);
-
-
-ALTER TABLE public.bugs
-    OWNER TO postgres;
-
---
--- Name: bugs_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public.bugs_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER SEQUENCE public.bugs_id_seq OWNER TO postgres;
-
---
--- Name: bugs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.bugs_id_seq OWNED BY public.bugs.id;
-
-
---
--- Name: comments; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.comments
-(
-    bug_id     integer,
-    comment    text,
-    user_id    integer,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
-
-
-ALTER TABLE public.comments
-    OWNER TO postgres;
-
---
--- Name: stats; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.stats
-(
-    user_id     integer           NOT NULL,
-    solved_bugs integer DEFAULT 0 NOT NULL
-);
-
-
-ALTER TABLE public.stats
-    OWNER TO postgres;
-
---
--- Name: users; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.users
-(
-    id            integer NOT NULL,
+    id            serial PRIMARY KEY,
     first_name    character varying(30),
     second_name   character varying(30),
     email         character varying(30),
     password_hash character varying(255),
     role          public.users_role
-);
+    );
 
+CREATE TABLE IF NOT EXISTS public.bugs
+(
+    id          serial PRIMARY KEY,
+    title       text,
+    description text,
+    status      public.bug_status,
+    created     timestamp without time zone,
+    reporter    integer REFERENCES public.users (id),
+    assigned_to integer REFERENCES public.users (id),
+    severity    public.severity
+    );
 
-ALTER TABLE public.users
-    OWNER TO postgres;
+CREATE TABLE IF NOT EXISTS public.comments
+(
+    bug_id     integer REFERENCES public.bugs (id),
+    comment    text,
+    user_id    integer REFERENCES public.users (id),
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+    );
 
---
--- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
+CREATE TABLE IF NOT EXISTS public.stats
+(
+    user_id     integer PRIMARY KEY REFERENCES public.users (id),
+    solved_bugs integer DEFAULT 0 NOT NULL
+    );
 
-CREATE SEQUENCE public.users_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
+-- Create SEQUENCES if they don't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_class WHERE relname = 'bugs_id_seq') THEN
+CREATE SEQUENCE public.bugs_id_seq OWNED BY public.bugs.id;
+ALTER TABLE ONLY public.bugs ALTER COLUMN id SET DEFAULT nextval('public.bugs_id_seq');
+END IF;
 
+    IF NOT EXISTS (SELECT 1 FROM pg_class WHERE relname = 'users_id_seq') THEN
+CREATE SEQUENCE public.users_id_seq OWNED BY public.users.id;
+ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq');
+END IF;
+END $$;
 
-ALTER SEQUENCE public.users_id_seq OWNER TO postgres;
+-- Create CASTs if they don't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_cast c
+        JOIN pg_type t ON c.castsource = t.oid
+        WHERE t.typname = 'character varying'
+          AND c.casttarget = (SELECT oid FROM pg_type WHERE typname = 'users_role')
+    ) THEN
+CREATE CAST (character varying AS public.users_role) WITH INOUT AS ASSIGNMENT;
+END IF;
 
---
--- Name: users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_cast c
+        JOIN pg_type t ON c.castsource = t.oid
+        WHERE t.typname = 'character varying'
+          AND c.casttarget = (SELECT oid FROM pg_type WHERE typname = 'bug_status')
+    ) THEN
+CREATE CAST (character varying AS public.bug_status) WITH INOUT AS ASSIGNMENT;
+END IF;
 
-ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
-
-
---
--- Name: bugs id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.bugs
-    ALTER COLUMN id SET DEFAULT nextval('public.bugs_id_seq'::regclass);
-
-
---
--- Name: users id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.users
-    ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
-
-
---
--- Name: bugs bugs_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.bugs
-    ADD CONSTRAINT bugs_pkey PRIMARY KEY (id);
-
-
---
--- Name: stats stats_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.stats
-    ADD CONSTRAINT stats_pkey PRIMARY KEY (user_id);
-
-
---
--- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.users
-    ADD CONSTRAINT users_pkey PRIMARY KEY (id);
-
-
---
--- Name: bugs bugs_assigned_to_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.bugs
-    ADD CONSTRAINT bugs_assigned_to_fkey FOREIGN KEY (assigned_to) REFERENCES public.users (id);
-
-
---
--- Name: bugs bugs_reporter_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.bugs
-    ADD CONSTRAINT bugs_reporter_fkey FOREIGN KEY (reporter) REFERENCES public.users (id);
-
-
---
--- Name: comments comments_bug_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.comments
-    ADD CONSTRAINT comments_bug_id_fkey FOREIGN KEY (bug_id) REFERENCES public.bugs (id);
-
-
---
--- Name: comments comments_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.comments
-    ADD CONSTRAINT comments_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users (id);
-
-
---
--- Name: stats stats_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.stats
-    ADD CONSTRAINT stats_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users (id);
-
-CREATE CAST (character varying AS users_role) with inout as assignment;
-CREATE CAST (character varying AS bug_status) with inout as assignment;
-CREATE CAST (character varying AS severity) with inout as assignment;
---
--- PostgreSQL database dump complete
---
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_cast c
+        JOIN pg_type t ON c.castsource = t.oid
+        WHERE t.typname = 'character varying'
+          AND c.casttarget = (SELECT oid FROM pg_type WHERE typname = 'severity')
+    ) THEN
+CREATE CAST (character varying AS public.severity) WITH INOUT AS ASSIGNMENT;
+END IF;
+END $$;

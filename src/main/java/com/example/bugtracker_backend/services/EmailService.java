@@ -8,6 +8,17 @@ import org.springframework.stereotype.Service;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 
+/**
+ * Service for sending emails.
+ * 
+ * This service uses JavaMailSender to send emails. The sender email address is
+ * configured via the application properties.
+ * 
+ * The service can be enabled or disabled based on the configuration property
+ * `spring.mail.enable`.
+ * 
+ * @author Jakub Hypki
+ */
 @Service
 public class EmailService {
     private final JavaMailSender mailSender;

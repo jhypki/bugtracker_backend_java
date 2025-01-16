@@ -7,6 +7,25 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+/**
+ * CustomUserDetailsService is a service class that implements the
+ * UserDetailsService interface
+ * to provide custom user authentication logic.
+ * 
+ * This service is annotated with @Service to indicate that it's a Spring
+ * service component.
+ * It uses a UserRepository to fetch user details from the database.
+ * 
+ * The class overrides the loadUserByUsername method to load user details based
+ * on the provided email.
+ * If the user is not found, it throws a UsernameNotFoundException.
+ * 
+ * The returned UserDetails object contains the user's email, password hash, and
+ * role.
+ * If the user has no specific role, it defaults to "USER".
+ * 
+ * @author
+ */
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
@@ -31,5 +50,5 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .roles(role)
                 .build();
     }
- 
+
 }

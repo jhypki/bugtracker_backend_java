@@ -40,6 +40,15 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 }
 
+jar {
+    archiveBaseName.set('bugtracker_backend')
+    archiveVersion.set('0.0.1')
+}
+
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+javadoc {
+    source = sourceSets.main.allJava
 }

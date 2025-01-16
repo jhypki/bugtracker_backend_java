@@ -4,7 +4,6 @@ import com.example.bugtracker_backend.dto.AuthenticationResponse;
 import com.example.bugtracker_backend.dto.LoginRequest;
 import com.example.bugtracker_backend.dto.RegisterRequest;
 import com.example.bugtracker_backend.services.UserService;
-import com.example.bugtracker_backend.utils.JwtUtils;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -12,6 +11,44 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * AuthController is a REST controller that handles authentication-related
+ * requests.
+ * It provides endpoints for user registration and login.
+ * 
+ * <p>
+ * Base URL: /api/auth
+ * </p>
+ * 
+ * <p>
+ * Endpoints:
+ * </p>
+ * <ul>
+ * <li>POST /register - Registers a new user</li>
+ * <li>POST /login - Authenticates an existing user</li>
+ * </ul>
+ * 
+ * <p>
+ * Dependencies:
+ * </p>
+ * <ul>
+ * <li>UserService - Service for handling user-related operations</li>
+ * </ul>
+ * 
+ * <p>
+ * Request and Response Models:
+ * </p>
+ * <ul>
+ * <li>RegisterRequest - Request model for user registration</li>
+ * <li>LoginRequest - Request model for user login</li>
+ * <li>AuthenticationResponse - Response model for authentication results</li>
+ * </ul>
+ * 
+ * @see UserService
+ * @see RegisterRequest
+ * @see LoginRequest
+ * @see AuthenticationResponse
+ */
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {

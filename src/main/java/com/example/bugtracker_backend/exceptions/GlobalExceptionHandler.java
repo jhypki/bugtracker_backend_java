@@ -11,6 +11,24 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * GlobalExceptionHandler is a centralized exception handling class that handles
+ * various exceptions
+ * thrown by the application and returns appropriate HTTP responses.
+ * 
+ * It handles the following exceptions:
+ * 
+ * - MethodArgumentNotValidException: Thrown when validation on an argument
+ * annotated with @Valid fails.
+ * - BadRequestException: Custom exception indicating a bad request.
+ * - ConflictException: Custom exception indicating a conflict.
+ * - NotFoundException: Custom exception indicating a resource was not found.
+ * - Exception: Generic exception handler for all other exceptions.
+ * 
+ * Each handler method constructs an ErrorResponse object containing the error
+ * message(s) and returns
+ * it with the appropriate HTTP status code.
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)

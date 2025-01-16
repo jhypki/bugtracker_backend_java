@@ -1,0 +1,26 @@
+# Use the official OpenJDK image for Java 21
+FROM eclipse-temurin:21-jdk
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy only the build-related files to leverage Docker's caching
+COPY build.gradle settings.gradle gradlew ./
+COPY gradle ./gradle
+
+# Grant execution permissions to the Gradle wrapper
+RUN chmod +x gradlew
+
+# Pre-fetch dependencies (cached if no changes in build.gradle)
+RUN ./gradlew dependencies --no-daemon
+
+# Copy the entire source code
+COPY . .
+
+# Set environment variables to use the test database
+ENV POSTGRES_DB=test_db
+ENV POSTGRES_USER=test_user
+ENV POSTGRES_PASSWORD=test_password
+
+# Command to run tests
+CMD ["./gradlew", "test", "--no-daemon"]
