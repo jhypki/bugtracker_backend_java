@@ -61,6 +61,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.PATCH, "/api/users/**")
                         .hasRole(UsersRole.ADMIN.toString())
+                        .requestMatchers("/api/bugs/**")
+                        .hasAnyRole(UsersRole.ADMIN.toString(), UsersRole.PROGRAMMER.toString(), UsersRole.SUPPORT.toString())
                         .requestMatchers("/api/users/**")
                         .hasAnyRole(UsersRole.ADMIN.toString(), UsersRole.PROGRAMMER.toString(), UsersRole.SUPPORT.toString())
                         .requestMatchers("/api/auth/**")
